@@ -1,7 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GenerateGame : MonoBehaviour
 {
+    public GameStatus gameStatus;
+
     public Spawn spawn;
     public GameObject groundPrefab;
     public GameObject wallPrefab;
@@ -22,8 +27,8 @@ public class GenerateGame : MonoBehaviour
         {2, 2, 2, 2, 2, 2, 2},
         {2, 1, 2, 4, 1, 1, 2},
         {2, 1, 3, 1, 1, 1, 2},
-        {2, 1, 1, 2, 3, 1, 2},
-        {2, 1, 1, 1, 1, 1, 2},
+        {2, 1, 1, 2, 1, 1, 2},
+        {2, 1, 1, 1, 3, 1, 2},
         {2, 4, 2, 1, 1, 5, 2},
         {2, 2, 2, 2, 2, 2, 2}
     };
@@ -43,6 +48,8 @@ public class GenerateGame : MonoBehaviour
 
         int LEVEL_WIDTH = levelMap.GetLength(0);
         int LEVEL_HEIGHT = levelMap.GetLength(1);
+
+        int TOTAL_BOX = levelMap.Cast<int>().Count(integer => integer == 3);
 
         for (int x = 0; x < LEVEL_WIDTH; x++)
         {
@@ -81,7 +88,7 @@ public class GenerateGame : MonoBehaviour
 
                     case 5: // Player (+ Ground)
                         spawn.prefabToSpawn = playerPrefab;
-                        spawn.SpawnGameObject($"Box_{x}_{y}", x, 1, y);
+                        spawn.SpawnGameObject($"Player", x, 1, y);
                         spawn.prefabToSpawn = groundPrefab;
                         spawn.SpawnGameObject($"Ground_{x}_{y}", x, 0, y);
                         break;
@@ -92,5 +99,7 @@ public class GenerateGame : MonoBehaviour
                 }
             }
         }
+
+        gameStatus.GetTotalBoxesToWin(TOTAL_BOX);
     }
 }

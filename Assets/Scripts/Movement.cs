@@ -1,59 +1,68 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    private float speed = 5;
-    private Rigidbody componentRigidBody;
+    public void MoveGameObject(float speed)
+    {
 
-    void Start()
-    {
-        componentRigidBody = GetComponent<Rigidbody>();
-    }
-    void Update()
-    {
-        MoveGameObject();
-    }
-
-    void MoveGameObject()
-    {
         float movementX = Input.GetAxis("Horizontal");
         float movementY = Input.GetAxis("Vertical");
 
-        Vector3 movement = new Vector3(movementX, 0, movementY);
-
+        Vector3 movement = new(movementX, 0, movementY);
         transform.Translate(speed * Time.deltaTime * movement);
     }
 
-    // void OnCollisionEnter(Collision collision)
-    // {
+   public void PushGameObject(GameObject gameObj, float margin, HashSet<string> tags)
+    {
+        Vector3 direction = GetPushDirection(gameObj);
 
-    //     Debug.Log(ReturnDirection(collision.gameObject, this.gameObject));
-    // }
+        if (!AreGameObjectsAligned(gameObj, margin))
+        {
+            return;
+        }
 
-    // private enum HitDirection { None, Top, Bottom, Forward, Back, Left, Right }
-    // private HitDirection ReturnDirection(GameObject Object, GameObject ObjectHit)
-    // {
-    //     HitDirection hitDirection = HitDirection.None;
-    //     RaycastHit MyRayHit;
-    //     Vector3 direction = (Object.transform.position - ObjectHit.transform.position).normalized;
-    //     Ray MyRay = new Ray(ObjectHit.transform.position, direction);
+        if (IsGameObjectBlocked(gameObj, direction, tags))
+        {
+            return;
+        }
 
-    //     if (Physics.Raycast(MyRay, out MyRayHit))
-    //     {
-    //         if (MyRayHit.collider != null)
-    //         {
-    //             Vector3 MyNormal = MyRayHit.normal;
-    //             MyNormal = MyRayHit.transform.TransformDirection(MyNormal);
+        FindAnyObjectByType<ActionUndo>().SaveStates();
 
-    //             if (MyNormal == MyRayHit.transform.up) { hitDirection = HitDirection.Top; }
-    //             if (MyNormal == -MyRayHit.transform.up) { hitDirection = HitDirection.Bottom; }
-    //             if (MyNormal == MyRayHit.transform.forward) { hitDirection = HitDirection.Forward; }
-    //             if (MyNormal == -MyRayHit.transform.forward) { hitDirection = HitDirection.Back; }
-    //             if (MyNormal == MyRayHit.transform.right) { hitDirection = HitDirection.Right; }
-    //             if (MyNormal == -MyRayHit.transform.right) { hitDirection = HitDirection.Left; }
-    //         }
-    //     }
+        gameObj.transform.position += direction;
+    }
 
-    //     return hitDirection;
-    // }
+    private Vector3 GetPushDirection(GameObject gameObj)
+    {
+        Vector3 direction = gameObj.transform.position - transform.position;
+        direction = direction.normalized;
+
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+        {
+            return new Vector3(Mathf.Sign(direction.x), 0, 0);
+        }
+        else
+        {
+            return new Vector3(0, 0, Mathf.Sign(direction.z));
+        }
+    }
+
+    private bool AreGameObjectsAligned(GameObject gameObj, float margin)
+    {
+        Vector3 baseGameObject = transform.position;
+        Vector3 newGameObject = gameObj.transform.position;
+
+        return Mathf.Abs(baseGameObject.x - newGameObject.x) <= margin || Mathf.Abs(baseGameObject.z - newGameObject.z) <= margin;
+    }
+
+    private bool IsGameObjectBlocked(GameObject gameObj, Vector3 direction, HashSet<string> tags)
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(gameObj.transform.position, direction, out hit, 1f))
+        {
+            return tags.Contains(hit.collider.tag);
+        }
+
+        return false;
+    }
 }
