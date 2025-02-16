@@ -49,7 +49,8 @@ public class Scenes : MonoBehaviour
 
     public void QuitGame()
     {
-        //Application.Quit();
-        SwitchToTargetScene("MainMenu");
+        Application.Quit();
+        //Dev mode
+        //SwitchToTargetScene("MainMenu");
     }
 }
